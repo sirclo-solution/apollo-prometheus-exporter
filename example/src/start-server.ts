@@ -21,22 +21,40 @@ export function startServer(port: number = 4000, hostname: string = '0.0.0.0') {
     {
       serviceName: 'apollo-example',
       reporter: {
-        agentHost: 'agent',
-        collectorEndpoint: 'http://agent:14268'
+        collectorEndpoint: 'http://agent:14268/api/traces',
+        logSpans: true
+      },
+      sampler: {
+        type: 'const',
+        param: 1
       }
     },
-    {}
+    {
+      tags: {
+        'apollo-example': '1.0.0'
+      },
+      logger: console
+    }
   );
 
   const localTracer = initTracer(
     {
       serviceName: 'apollo-example',
       reporter: {
-        agentHost: 'agent',
-        collectorEndpoint: 'http://agent:14268'
+        collectorEndpoint: 'http://agent:14268/api/traces',
+        logSpans: true
+      },
+      sampler: {
+        type: 'const',
+        param: 1
       }
     },
-    {}
+    {
+      tags: {
+        'apollo-example': '1.0.0'
+      },
+      logger: console
+    }
   );
 
   const server = new ApolloServer({
