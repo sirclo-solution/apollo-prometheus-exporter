@@ -29,7 +29,10 @@ export function startServer(port: number = 4000, hostname: string = '0.0.0.0') {
 
   const localTracer = initTracer(
     {
-      serviceName: 'apollo-example'
+      serviceName: 'apollo-example',
+      reporter: {
+        agentHost: 'agent'
+      }
     },
     {}
   );
