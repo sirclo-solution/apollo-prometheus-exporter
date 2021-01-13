@@ -31,7 +31,7 @@ export function startServer(port: number = 4000, hostname: string = '0.0.0.0') {
     },
     {
       tags: {
-        'apollo-example': '1.0.0'
+        'apollo-example.version': '1.0.0'
       },
       logger: console
     }
@@ -51,7 +51,7 @@ export function startServer(port: number = 4000, hostname: string = '0.0.0.0') {
     },
     {
       tags: {
-        'apollo-example': '1.0.0'
+        'apollo-example.version': '1.0.0'
       },
       logger: console
     }
