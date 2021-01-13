@@ -10,7 +10,7 @@ log4js.configure({
     },
     all: {
       type: 'logLevelFilter',
-      level: 'INFO',
+      level: 'LOG',
       appender: 'logFile'
     }
   },

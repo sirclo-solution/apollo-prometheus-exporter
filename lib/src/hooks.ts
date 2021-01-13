@@ -172,6 +172,8 @@ export function generateHooks(metrics: Metrics): ApolloServerPlugin {
               },
               requestEndDate - requestStartDate
             );
+          } else {
+            console.error(context.errors);
           }
         }
       };
