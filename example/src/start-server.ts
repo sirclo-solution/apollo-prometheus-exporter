@@ -1,5 +1,7 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
+import OpentracingPlugin from 'apollo-opentracing';
+import { initTracer } from 'jaeger-client';
 
 import { createPrometheusExporterPlugin } from '../../lib/src';
 
@@ -15,10 +17,33 @@ export function startServer(port: number = 4000, hostname: string = '0.0.0.0') {
     app
   });
 
+  const serverTracer = initTracer(
+    {
+      serviceName: 'apollo-example',
+      reporter: {
+        agentHost: 'agent'
+      }
+    },
+    {}
+  );
+
+  const localTracer = initTracer(
+    {
+      serviceName: 'apollo-example'
+    },
+    {}
+  );
+
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    plugins: [prometheusExporterPlugin]
+    plugins: [
+      prometheusExporterPlugin,
+      OpentracingPlugin({
+        server: serverTracer,
+        local: localTracer
+      })
+    ]
   });
 
   server.applyMiddleware({ app, path: '/' });
