@@ -66,6 +66,7 @@
   },
   "dependencies": {
     "apollo-opentracing": "^2.0.0",
-    "jaeger-client": "^3.18.1"
+    "jaeger-client": "^3.18.1",
+    "log4js": "^6.3.0"
   }
 }
