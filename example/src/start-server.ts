@@ -21,7 +21,8 @@ export function startServer(port: number = 4000, hostname: string = '0.0.0.0') {
     {
       serviceName: 'apollo-example',
       reporter: {
-        agentHost: 'agent'
+        agentHost: 'agent',
+        collectorEndpoint: 'http://agent:14268'
       }
     },
     {}
@@ -31,7 +32,8 @@ export function startServer(port: number = 4000, hostname: string = '0.0.0.0') {
     {
       serviceName: 'apollo-example',
       reporter: {
-        agentHost: 'agent'
+        agentHost: 'agent',
+        collectorEndpoint: 'http://agent:14268'
       }
     },
     {}
