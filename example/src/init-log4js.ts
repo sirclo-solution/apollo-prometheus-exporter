@@ -21,12 +21,9 @@ log4js.configure({
       type: 'logLevelFilter',
       level: 'INFO',
       appender: 'logFile'
-    },
-    out: {
-      type: 'stdout'
     }
   },
   categories: {
-    default: { appenders: ['all', 'out'], level: 'trace' }
+    default: { appenders: ['all'], level: 'trace' }
   }
 });
