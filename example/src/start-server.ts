@@ -1,10 +1,9 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
-import OpentracingPlugin from 'apollo-opentracing';
-import { initTracer } from 'jaeger-client';
 
 import { createPrometheusExporterPlugin } from '../../lib/src';
 
+import { createTracingPlugin } from './createTracingPlugin';
 import { readSchema } from './read-schema';
 import { resolvers } from './resolvers';
 
@@ -17,56 +16,10 @@ export function startServer(port: number = 4000, hostname: string = '0.0.0.0') {
     app
   });
 
-  const serverTracer = initTracer(
-    {
-      serviceName: 'apollo-example',
-      reporter: {
-        collectorEndpoint: 'http://agent:14268/api/traces',
-        logSpans: true
-      },
-      sampler: {
-        type: 'const',
-        param: 1
-      }
-    },
-    {
-      tags: {
-        'apollo-example.version': '1.0.0'
-      },
-      logger: console
-    }
-  );
-
-  const localTracer = initTracer(
-    {
-      serviceName: 'apollo-example',
-      reporter: {
-        collectorEndpoint: 'http://agent:14268/api/traces',
-        logSpans: true
-      },
-      sampler: {
-        type: 'const',
-        param: 1
-      }
-    },
-    {
-      tags: {
-        'apollo-example.version': '1.0.0'
-      },
-      logger: console
-    }
-  );
-
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    plugins: [
-      prometheusExporterPlugin,
-      OpentracingPlugin({
-        server: serverTracer,
-        local: localTracer
-      })
-    ]
+    plugins: [prometheusExporterPlugin, createTracingPlugin()]
   });
 
   server.applyMiddleware({ app, path: '/' });
