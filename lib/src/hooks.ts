@@ -91,46 +91,15 @@ export function generateHooks(metrics: Metrics): ApolloServerPlugin {
     requestDidStart(requestContext) {
       const requestStartDate = Date.now();
 
-      const id = uuidv4();
-
-      console.info({
-        action: 'request',
-        status: 'start',
-        id,
-        request: {
-          method: requestContext.request.http?.method,
-          headers: requestContext.request.http?.headers,
-          url: requestContext.request.http?.url
-        },
-        query: {
-          operationName: requestContext.request.operationName,
-          query: requestContext.request.query,
-          variables: JSON.stringify(requestContext.request.variables)
-        }
-      });
-
-      requestContext.context.requestId = id;
+      requestContext.context.requestId = uuidv4();
 
       actionMetric(MetricsNames.QUERY_STARTED, getLabelsFromContext(requestContext));
 
       return {
         parsingDidStart(context) {
-          console.debug({
-            action: 'parse',
-            status: 'start',
-            id
-          });
-
           actionMetric(MetricsNames.QUERY_PARSE_STARTED, getLabelsFromContext(context));
 
           return (err) => {
-            console.debug({
-              action: 'parse',
-              status: 'end',
-              success: !!!err,
-              id
-            });
-
             if (err) {
               actionMetric(MetricsNames.QUERY_PARSE_FAILED, getLabelsFromContext(context));
             }
@@ -138,22 +107,9 @@ export function generateHooks(metrics: Metrics): ApolloServerPlugin {
         },
 
         validationDidStart(context) {
-          console.debug({
-            action: 'validation',
-            status: 'start',
-            id
-          });
-
           actionMetric(MetricsNames.QUERY_VALIDATION_STARTED, getLabelsFromContext(context));
 
           return (err) => {
-            console.debug({
-              action: 'validation',
-              status: 'end',
-              success: !!!err,
-              id
-            });
-
             if (err) {
               actionMetric(MetricsNames.QUERY_VALIDATION_FAILED, getLabelsFromContext(context));
             }
@@ -161,42 +117,17 @@ export function generateHooks(metrics: Metrics): ApolloServerPlugin {
         },
 
         didResolveOperation(context) {
-          console.debug({
-            action: 'opeartionResolved',
-            id
-          });
-
           actionMetric(MetricsNames.QUERY_RESOLVED, getLabelsFromContext(context));
         },
 
         executionDidStart(context) {
-          console.debug({
-            action: 'execution',
-            status: 'start',
-            id
-          });
-
           actionMetric(MetricsNames.QUERY_EXECUTION_STARTED, getLabelsFromContext(context));
 
           return {
             willResolveField(field) {
-              console.debug({
-                action: 'resolveField',
-                status: 'start',
-                field: getLabelsFromFieldResolver(field),
-                id
-              });
-
               const fieldResolveStart = Date.now();
 
               return () => {
-                console.debug({
-                  action: 'resolveField',
-                  status: 'end',
-                  field: getLabelsFromFieldResolver(field),
-                  id
-                });
-
                 const fieldResolveEnd = Date.now();
 
                 actionMetric(
@@ -210,13 +141,6 @@ export function generateHooks(metrics: Metrics): ApolloServerPlugin {
               };
             },
             executionDidEnd(err) {
-              console.debug({
-                action: 'execution',
-                status: 'end',
-                success: !!!err,
-                id
-              });
-
               if (err) {
                 actionMetric(MetricsNames.QUERY_EXECUTION_FAILED, getLabelsFromContext(context));
               }
@@ -230,20 +154,15 @@ export function generateHooks(metrics: Metrics): ApolloServerPlugin {
           actionMetric(MetricsNames.QUERY_FAILED, getLabelsFromContext(context));
 
           context.errors.forEach((error) => {
-            console.error(
-              {
-                action: 'request',
-                status: 'error',
-                id
-              },
-              error
+            context.logger.error(
+              JSON.stringify({
+                requestId: context.context.requestId,
+                spanId: context.context.spanId,
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+              })
             );
-          });
-
-          console.info({
-            action: 'request',
-            status: 'end',
-            id
           });
 
           actionMetric(
@@ -259,13 +178,39 @@ export function generateHooks(metrics: Metrics): ApolloServerPlugin {
         willSendResponse(context) {
           const requestEndDate = Date.now();
 
-          if ((context.errors?.length ?? 0) === 0) {
-            console.info({
-              action: 'request',
-              status: 'end',
-              id
-            });
+          const headersEntries = context.request.http?.headers.entries();
+          let currentHeader = headersEntries?.next();
+          const headers: Record<string, any> = {};
 
+          while (!currentHeader?.done) {
+            const key: string = currentHeader?.value[0] as string;
+            const value = currentHeader?.value[1];
+
+            headers[key] = value;
+
+            currentHeader = headersEntries?.next();
+          }
+
+          context.logger.info(
+            JSON.stringify({
+              action: 'request',
+              requestId: context.context.requestId,
+              spanId: context.context.spanId,
+              duration: requestEndDate - requestStartDate,
+              request: {
+                method: context.request.http?.method,
+                headers,
+                url: context.request.http?.url
+              },
+              query: {
+                operationName: context.request.operationName,
+                query: context.request.query,
+                variables: context.request.variables
+              }
+            })
+          );
+
+          if ((context.errors?.length ?? 0) === 0) {
             actionMetric(
               MetricsNames.QUERY_DURATION,
               {

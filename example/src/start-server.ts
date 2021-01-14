@@ -1,5 +1,6 @@
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
+import log4js from 'log4js';
 
 import { createPrometheusExporterPlugin } from '../../lib/src';
 
@@ -17,7 +18,7 @@ export function startServer(port: number = 4000, hostname: string = '0.0.0.0') {
   });
 
   const server = new ApolloServer({
-    logger: console,
+    logger: log4js.getLogger(),
     typeDefs,
     resolvers,
     plugins: [prometheusExporterPlugin, createTracingPlugin()]

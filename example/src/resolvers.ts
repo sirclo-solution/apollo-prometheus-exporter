@@ -18,11 +18,9 @@ export function generateAsyncResponse<T = any>(
 
           resolve(data);
         } catch (err) {
-          console.error(err);
           reject(err);
         }
       } else {
-        console.error('Error in async operation');
         reject(new Error('Error in async operation'));
       }
     }, Math.floor(Math.random() * maxTimeout) + 1);
@@ -36,7 +34,6 @@ export const resolvers: Resolvers = {
         const author = authors.find((author) => author.id === id);
 
         if (!author) {
-          console.error('Author not found');
           throw new Error('Author not found');
         }
 
@@ -51,7 +48,6 @@ export const resolvers: Resolvers = {
         const book = books.find((book) => book.id === id);
 
         if (!book) {
-          console.error('Book not found');
           throw new Error('Book not found');
         }
 
@@ -82,7 +78,6 @@ export const resolvers: Resolvers = {
         });
 
         if (authorIndex === -1) {
-          console.error('Author not found');
           throw new Error('Author not found');
         }
 
@@ -123,7 +118,6 @@ export const resolvers: Resolvers = {
         });
 
         if (bookIndex === -1) {
-          console.error('Book not found');
           throw new Error('Book not found');
         }
 
@@ -144,7 +138,6 @@ export const resolvers: Resolvers = {
         const author = authors.find((author) => author.id === book.authorId);
 
         if (!author) {
-          console.error('Author not found');
           throw new Error('Author not found');
         }
 
