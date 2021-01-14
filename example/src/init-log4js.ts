@@ -17,8 +17,9 @@ log4js.configure({
   }
 });
 
-const logger = log4js.getLogger('default');
-console.info = (message: string, ...args: any) => logger.info(message, ...args);
-console.log = (message: string, ...args: any) => logger.log(message, ...args);
-console.warn = (message: string, ...args: any) => logger.warn(message, ...args);
-console.error = (message: string, ...args: any) => logger.error(message, ...args);
+// const logger = log4js.getLogger('default');
+// console.debug = (message: string, ...args: any) => logger.debug(message, ...args);
+// console.info = (message: string, ...args: any) => logger.info(message, ...args);
+// console.log = (message: string, ...args: any) => logger.log(message, ...args);
+// console.warn = (message: string, ...args: any) => logger.warn(message, ...args);
+// console.error = (message: string, ...args: any) => logger.error(message, ...args);

@@ -1,7 +1,8 @@
 import OpentracingPlugin, { SpanContext } from 'apollo-opentracing';
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { ApolloServerPlugin, GraphQLRequestContext } from 'apollo-server-plugin-base';
 import { initTracer, PrometheusMetricsFactory } from 'jaeger-client';
-import promClient from 'prom-client';
+import { Span } from 'opentracing';
+import * as promClient from 'prom-client';
 
 export function createTracingPlugin(): ApolloServerPlugin<SpanContext> {
   const serviceName = 'apollo-example';
@@ -12,8 +13,7 @@ export function createTracingPlugin(): ApolloServerPlugin<SpanContext> {
     {
       serviceName,
       reporter: {
-        collectorEndpoint: 'http://agent:14268/api/traces',
-        logSpans: true
+        collectorEndpoint: 'http://agent:14268/api/traces'
       },
       sampler: {
         type: 'const',
@@ -32,10 +32,9 @@ export function createTracingPlugin(): ApolloServerPlugin<SpanContext> {
   return OpentracingPlugin({
     server: tracer,
     local: tracer,
-    onRequestResolve: (span, info) => {
+    onRequestResolve: (span: Span, info: GraphQLRequestContext) => {
       span.addTags({
-        operation: info.operation?.operation,
-        operationName: info.operationName
+        requestId: info.context.requestId
       });
     }
   });

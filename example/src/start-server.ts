@@ -3,7 +3,7 @@ import express from 'express';
 
 import { createPrometheusExporterPlugin } from '../../lib/src';
 
-import { createTracingPlugin } from './createTracingPlugin';
+import { createTracingPlugin } from './create-tracing-plugin';
 import { readSchema } from './read-schema';
 import { resolvers } from './resolvers';
 
@@ -17,6 +17,7 @@ export function startServer(port: number = 4000, hostname: string = '0.0.0.0') {
   });
 
   const server = new ApolloServer({
+    logger: console,
     typeDefs,
     resolvers,
     plugins: [prometheusExporterPlugin, createTracingPlugin()]
