@@ -154,15 +154,13 @@ export function generateHooks(metrics: Metrics): ApolloServerPlugin {
           actionMetric(MetricsNames.QUERY_FAILED, getLabelsFromContext(context));
 
           context.errors.forEach((error) => {
-            context.logger.error(
-              JSON.stringify({
-                requestId: context.context.requestId,
-                spanId: context.context.spanId,
-                name: error.name,
-                message: error.message,
-                stack: error.stack
-              })
-            );
+            context.logger.error({
+              requestId: context.context.requestId,
+              spanId: context.context.spanId,
+              name: error.name,
+              message: error.message,
+              stack: error.stack
+            });
           });
 
           actionMetric(
@@ -191,24 +189,22 @@ export function generateHooks(metrics: Metrics): ApolloServerPlugin {
             currentHeader = headersEntries?.next();
           }
 
-          context.logger.info(
-            JSON.stringify({
-              action: 'request',
-              requestId: context.context.requestId,
-              spanId: context.context.spanId,
-              duration: requestEndDate - requestStartDate,
-              request: {
-                method: context.request.http?.method,
-                headers,
-                url: context.request.http?.url
-              },
-              query: {
-                operationName: context.request.operationName,
-                query: context.request.query,
-                variables: context.request.variables
-              }
-            })
-          );
+          context.logger.info({
+            action: 'request',
+            requestId: context.context.requestId,
+            spanId: context.context.spanId,
+            duration: requestEndDate - requestStartDate,
+            request: {
+              method: context.request.http?.method,
+              headers,
+              url: context.request.http?.url
+            },
+            query: {
+              operationName: context.request.operationName,
+              query: context.request.query,
+              variables: context.request.variables
+            }
+          });
 
           if ((context.errors?.length ?? 0) === 0) {
             actionMetric(
