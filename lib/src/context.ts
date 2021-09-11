@@ -9,6 +9,7 @@ export interface Context {
   defaultMetrics: boolean;
   defaultMetricsOptions: DefaultMetricsCollectorConfiguration;
   disabledMetrics: MetricsNames[];
+  durationHistogramsBuckets: number[];
   hostnameLabel: boolean;
   hostnameLabelName: string;
   metricsEndpoint: boolean;
@@ -22,6 +23,7 @@ export function generateContext(options: Partial<Context>): Context {
     defaultLabels: {},
     defaultMetrics: true,
     disabledMetrics: [],
+    durationHistogramsBuckets: [0.001, 0.005, 0.015, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1, 5, 10],
     hostnameLabel: true,
     hostnameLabelName: 'hostname',
     metricsEndpoint: true,
