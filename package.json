@@ -15,7 +15,7 @@
   "homepage": "https://github.com/bfmatei/apollo-prometheus-exporter#readme",
   "repository": "github:bfmatei/apollo-prometheus-exporter",
   "scripts": {
-    "postinstall": "husky install",
+    "prepare": "husky install",
     "start": "npm run example:start:watch",
     "build": "npm run lib:build",
     "release": "npm run lib:release",
