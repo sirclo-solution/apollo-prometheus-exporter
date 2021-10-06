@@ -1,5 +1,5 @@
 {
-  "name": "@bmatei/apollo-prometheus-exporter",
+  "name": "sirclo-solution/apollo-prometheus-exporter",
   "version": "0.0.0-development",
   "description": "Plugin for Apollo Server to export metrics in Prometheus format",
   "keywords": [
