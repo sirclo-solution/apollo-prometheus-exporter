@@ -38,7 +38,7 @@ export const queryLabelNames = ['operationName', 'operation'];
 
 export const fieldLabelNames = ['operationName', 'operation', 'fieldName', 'parentType', 'returnType', 'pathLength'];
 
-export const durationHistogramsBuckets = [0.001, 0.005, 0.015, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1, 5, 10];
+export const durationHistogramsBuckets = [0.1, 0.3, 0.5, 1, 5];
 
 export const metricsConfig: MetricConfig[] = [
   {
