@@ -42,7 +42,7 @@ function createPlugin(options) {
     setDefaultLabels(register, context);
     toggleEndpoint(register, context);
     const metrics = (0, metrics_1.generateMetrics)(register, context);
-    return (0, hooks_1.generateHooks)(metrics);
+    return (0, hooks_1.generateHooks)(metrics, context);
 }
 exports.createPlugin = createPlugin;
 //# sourceMappingURL=plugin.js.map

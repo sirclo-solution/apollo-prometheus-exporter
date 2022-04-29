@@ -107,7 +107,7 @@ exports.metricsConfig = [
         labelNames: exports.fieldLabelNames
     }
 ];
-function generateMetrics(register, { durationHistogramsBuckets, skipMetrics }) {
+function generateMetrics(register, { durationHistogramsBuckets, skipMetrics, customLabels }) {
     return exports.metricsConfig.reduce((acc, metric) => {
         acc[metric.name] = {
             type: metric.type,
@@ -117,7 +117,7 @@ function generateMetrics(register, { durationHistogramsBuckets, skipMetrics }) {
         const commonConfig = {
             name: metric.name,
             help: metric.help,
-            labelNames: metric.labelNames,
+            labelNames: metric.labelNames.concat(customLabels),
             registers: [register]
         };
         switch (metric.type) {

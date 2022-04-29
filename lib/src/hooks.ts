@@ -1,8 +1,9 @@
 import apolloPackageJson from 'apollo-server-express/package.json';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import { GraphQLFieldResolverParams } from 'apollo-server-types';
+import { BaseContext, GraphQLFieldResolverParams } from 'apollo-server-types';
 import { Path } from 'graphql/jsutils/Path';
 import { Counter, Gauge, Histogram, LabelValues } from 'prom-client';
+import { AppContext, Args, Context, Source } from './context';
 
 import { convertMsToS, filterLabels } from './helpers';
 import { ContextTypes, FieldTypes, MetricsNames, Metrics, MetricTypes } from './metrics';
@@ -12,6 +13,15 @@ export function getLabelsFromContext(context: any): LabelValues<string> {
     operationName: context?.request?.operationName,
     operation: context?.operation?.operation
   };
+}
+
+export function getCustomLabelsFromAppContext(context: BaseContext, customLabels: string[]): LabelValues<string> {
+  if (customLabels.length === 0 || !context) {
+    return {};
+  }
+
+  // get application's context that correspond with customLabels
+  return customLabels.reduce((_, cur) => ({ [cur]: context[cur] }), {});
 }
 
 export function countFieldAncestors(path: Path | undefined): string {
@@ -40,7 +50,10 @@ export function getLabelsFromFieldResolver({
   };
 }
 
-export function generateHooks(metrics: Metrics): ApolloServerPlugin {
+export function generateHooks<C = AppContext, S = Source, A = Args>(
+  metrics: Metrics,
+  ctx: Context<C, S, A>
+): ApolloServerPlugin {
   const actionMetric = (
     {
       name,
@@ -100,27 +113,55 @@ export function generateHooks(metrics: Metrics): ApolloServerPlugin {
 
     requestDidStart(requestContext) {
       const requestStartDate = Date.now();
+      const customLabelsFromAppContext = getCustomLabelsFromAppContext(requestContext.context, ctx.customLabels);
 
-      actionMetric({ name: MetricsNames.QUERY_STARTED, labels: getLabelsFromContext(requestContext) }, requestContext);
+      actionMetric(
+        {
+          name: MetricsNames.QUERY_STARTED,
+          labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(requestContext) }
+        },
+        requestContext
+      );
 
       return {
         parsingDidStart(context) {
-          actionMetric({ name: MetricsNames.QUERY_PARSE_STARTED, labels: getLabelsFromContext(context) }, context);
+          actionMetric(
+            {
+              name: MetricsNames.QUERY_PARSE_STARTED,
+              labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(context) }
+            },
+            context
+          );
 
           return (err) => {
             if (err) {
-              actionMetric({ name: MetricsNames.QUERY_PARSE_FAILED, labels: getLabelsFromContext(context) }, context);
+              actionMetric(
+                {
+                  name: MetricsNames.QUERY_PARSE_FAILED,
+                  labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(context) }
+                },
+                context
+              );
             }
           };
         },
 
         validationDidStart(context) {
-          actionMetric({ name: MetricsNames.QUERY_VALIDATION_STARTED, labels: getLabelsFromContext(context) }, context);
+          actionMetric(
+            {
+              name: MetricsNames.QUERY_VALIDATION_STARTED,
+              labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(context) }
+            },
+            context
+          );
 
           return (err) => {
             if (err) {
               actionMetric(
-                { name: MetricsNames.QUERY_VALIDATION_FAILED, labels: getLabelsFromContext(context) },
+                {
+                  name: MetricsNames.QUERY_VALIDATION_FAILED,
+                  labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(context) }
+                },
                 context
               );
             }
@@ -128,11 +169,23 @@ export function generateHooks(metrics: Metrics): ApolloServerPlugin {
         },
 
         didResolveOperation(context) {
-          actionMetric({ name: MetricsNames.QUERY_RESOLVED, labels: getLabelsFromContext(context) }, context);
+          actionMetric(
+            {
+              name: MetricsNames.QUERY_RESOLVED,
+              labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(context) }
+            },
+            context
+          );
         },
 
         executionDidStart(context) {
-          actionMetric({ name: MetricsNames.QUERY_EXECUTION_STARTED, labels: getLabelsFromContext(context) }, context);
+          actionMetric(
+            {
+              name: MetricsNames.QUERY_EXECUTION_STARTED,
+              labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(context) }
+            },
+            context
+          );
 
           return {
             willResolveField(field) {
@@ -145,6 +198,7 @@ export function generateHooks(metrics: Metrics): ApolloServerPlugin {
                   {
                     name: MetricsNames.QUERY_FIELD_RESOLUTION_DURATION,
                     labels: {
+                      ...customLabelsFromAppContext,
                       ...getLabelsFromContext(context),
                       ...getLabelsFromFieldResolver(field)
                     },
@@ -158,7 +212,10 @@ export function generateHooks(metrics: Metrics): ApolloServerPlugin {
             executionDidEnd(err) {
               if (err) {
                 actionMetric(
-                  { name: MetricsNames.QUERY_EXECUTION_FAILED, labels: getLabelsFromContext(context) },
+                  {
+                    name: MetricsNames.QUERY_EXECUTION_FAILED,
+                    labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(context) }
+                  },
                   context
                 );
               }
@@ -169,12 +226,19 @@ export function generateHooks(metrics: Metrics): ApolloServerPlugin {
         didEncounterErrors(context) {
           const requestEndDate = Date.now();
 
-          actionMetric({ name: MetricsNames.QUERY_FAILED, labels: getLabelsFromContext(context) }, context);
+          actionMetric(
+            {
+              name: MetricsNames.QUERY_FAILED,
+              labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(context) }
+            },
+            context
+          );
 
           actionMetric(
             {
               name: MetricsNames.QUERY_DURATION,
               labels: {
+                ...customLabelsFromAppContext,
                 ...getLabelsFromContext(context),
                 success: 'false'
               },
@@ -192,6 +256,7 @@ export function generateHooks(metrics: Metrics): ApolloServerPlugin {
               {
                 name: MetricsNames.QUERY_DURATION,
                 labels: {
+                  ...customLabelsFromAppContext,
                   ...getLabelsFromContext(context),
                   success: 'true'
                 },

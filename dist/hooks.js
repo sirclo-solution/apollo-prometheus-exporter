@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateHooks = exports.getLabelsFromFieldResolver = exports.getApolloServerVersion = exports.countFieldAncestors = exports.getLabelsFromContext = void 0;
+exports.generateHooks = exports.getLabelsFromFieldResolver = exports.getApolloServerVersion = exports.countFieldAncestors = exports.getCustomLabelsFromAppContext = exports.getLabelsFromContext = void 0;
 const package_json_1 = __importDefault(require("apollo-server-express/package.json"));
 const helpers_1 = require("./helpers");
 const metrics_1 = require("./metrics");
@@ -15,6 +15,14 @@ function getLabelsFromContext(context) {
     };
 }
 exports.getLabelsFromContext = getLabelsFromContext;
+function getCustomLabelsFromAppContext(context, customLabels) {
+    if (customLabels.length === 0 || !context) {
+        return {};
+    }
+    // get application's context that correspond with customLabels
+    return customLabels.reduce((_, cur) => ({ [cur]: context[cur] }), {});
+}
+exports.getCustomLabelsFromAppContext = getCustomLabelsFromAppContext;
 function countFieldAncestors(path) {
     let counter = 0;
     while (path !== undefined) {
@@ -37,7 +45,7 @@ function getLabelsFromFieldResolver({ info: { fieldName, parentType, path, retur
     };
 }
 exports.getLabelsFromFieldResolver = getLabelsFromFieldResolver;
-function generateHooks(metrics) {
+function generateHooks(metrics, ctx) {
     const actionMetric = ({ name, labels = {}, value }, context, field) => {
         if (!metrics[name].skip(labels, context, field)) {
             const filteredLabels = (0, helpers_1.filterLabels)(labels);
@@ -78,29 +86,51 @@ function generateHooks(metrics) {
         },
         requestDidStart(requestContext) {
             const requestStartDate = Date.now();
-            actionMetric({ name: metrics_1.MetricsNames.QUERY_STARTED, labels: getLabelsFromContext(requestContext) }, requestContext);
+            const customLabelsFromAppContext = getCustomLabelsFromAppContext(requestContext.context, ctx.customLabels);
+            actionMetric({
+                name: metrics_1.MetricsNames.QUERY_STARTED,
+                labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(requestContext) }
+            }, requestContext);
             return {
                 parsingDidStart(context) {
-                    actionMetric({ name: metrics_1.MetricsNames.QUERY_PARSE_STARTED, labels: getLabelsFromContext(context) }, context);
+                    actionMetric({
+                        name: metrics_1.MetricsNames.QUERY_PARSE_STARTED,
+                        labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(context) }
+                    }, context);
                     return (err) => {
                         if (err) {
-                            actionMetric({ name: metrics_1.MetricsNames.QUERY_PARSE_FAILED, labels: getLabelsFromContext(context) }, context);
+                            actionMetric({
+                                name: metrics_1.MetricsNames.QUERY_PARSE_FAILED,
+                                labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(context) }
+                            }, context);
                         }
                     };
                 },
                 validationDidStart(context) {
-                    actionMetric({ name: metrics_1.MetricsNames.QUERY_VALIDATION_STARTED, labels: getLabelsFromContext(context) }, context);
+                    actionMetric({
+                        name: metrics_1.MetricsNames.QUERY_VALIDATION_STARTED,
+                        labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(context) }
+                    }, context);
                     return (err) => {
                         if (err) {
-                            actionMetric({ name: metrics_1.MetricsNames.QUERY_VALIDATION_FAILED, labels: getLabelsFromContext(context) }, context);
+                            actionMetric({
+                                name: metrics_1.MetricsNames.QUERY_VALIDATION_FAILED,
+                                labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(context) }
+                            }, context);
                         }
                     };
                 },
                 didResolveOperation(context) {
-                    actionMetric({ name: metrics_1.MetricsNames.QUERY_RESOLVED, labels: getLabelsFromContext(context) }, context);
+                    actionMetric({
+                        name: metrics_1.MetricsNames.QUERY_RESOLVED,
+                        labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(context) }
+                    }, context);
                 },
                 executionDidStart(context) {
-                    actionMetric({ name: metrics_1.MetricsNames.QUERY_EXECUTION_STARTED, labels: getLabelsFromContext(context) }, context);
+                    actionMetric({
+                        name: metrics_1.MetricsNames.QUERY_EXECUTION_STARTED,
+                        labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(context) }
+                    }, context);
                     return {
                         willResolveField(field) {
                             const fieldResolveStart = Date.now();
@@ -109,6 +139,7 @@ function generateHooks(metrics) {
                                 actionMetric({
                                     name: metrics_1.MetricsNames.QUERY_FIELD_RESOLUTION_DURATION,
                                     labels: {
+                                        ...customLabelsFromAppContext,
                                         ...getLabelsFromContext(context),
                                         ...getLabelsFromFieldResolver(field)
                                     },
@@ -118,17 +149,24 @@ function generateHooks(metrics) {
                         },
                         executionDidEnd(err) {
                             if (err) {
-                                actionMetric({ name: metrics_1.MetricsNames.QUERY_EXECUTION_FAILED, labels: getLabelsFromContext(context) }, context);
+                                actionMetric({
+                                    name: metrics_1.MetricsNames.QUERY_EXECUTION_FAILED,
+                                    labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(context) }
+                                }, context);
                             }
                         }
                     };
                 },
                 didEncounterErrors(context) {
                     const requestEndDate = Date.now();
-                    actionMetric({ name: metrics_1.MetricsNames.QUERY_FAILED, labels: getLabelsFromContext(context) }, context);
+                    actionMetric({
+                        name: metrics_1.MetricsNames.QUERY_FAILED,
+                        labels: { ...customLabelsFromAppContext, ...getLabelsFromContext(context) }
+                    }, context);
                     actionMetric({
                         name: metrics_1.MetricsNames.QUERY_DURATION,
                         labels: {
+                            ...customLabelsFromAppContext,
                             ...getLabelsFromContext(context),
                             success: 'false'
                         },
@@ -142,6 +180,7 @@ function generateHooks(metrics) {
                         actionMetric({
                             name: metrics_1.MetricsNames.QUERY_DURATION,
                             labels: {
+                                ...customLabelsFromAppContext,
                                 ...getLabelsFromContext(context),
                                 success: 'true'
                             },
