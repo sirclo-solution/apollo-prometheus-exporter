@@ -1,5 +1,38 @@
-import { Metric, Registry } from 'prom-client';
-import { Context } from './context';
+import { BaseContext, GraphQLRequestContext, GraphQLRequestContextDidEncounterErrors, GraphQLRequestContextDidResolveOperation, GraphQLRequestContextExecutionDidStart, GraphQLRequestContextParsingDidStart, GraphQLRequestContextValidationDidStart, GraphQLRequestContextWillSendResponse } from 'apollo-server-plugin-base';
+import { GraphQLFieldResolverParams } from 'apollo-server-types';
+import { LabelValues, Metric, Registry } from 'prom-client';
+import { AppContext, Args, Context, Source } from './context';
+export interface ServerLabels extends LabelValues<string> {
+    version: string;
+}
+export interface QueryLabels extends LabelValues<string> {
+    operationName?: string;
+    operation?: string;
+}
+export interface QueryDurationLabels extends QueryLabels {
+    success: 'true' | 'false';
+}
+export interface FieldLabels extends QueryLabels {
+    fieldName: string;
+    parentType: string;
+    pathLength: string;
+    returnType?: string;
+}
+export declare type ContextTypes<C extends BaseContext = BaseContext> = GraphQLRequestContext<C> | GraphQLRequestContextParsingDidStart<C> | GraphQLRequestContextValidationDidStart<C> | GraphQLRequestContextDidResolveOperation<C> | GraphQLRequestContextExecutionDidStart<C> | GraphQLRequestContextDidEncounterErrors<C> | GraphQLRequestContextWillSendResponse<C>;
+export declare type FieldTypes<S = any, BC = BaseContext, A = {
+    [p: string]: any;
+}> = GraphQLFieldResolverParams<S, BC, A>;
+export interface SkipFn<L extends LabelValues<string> = LabelValues<string>> {
+    (labels: L): boolean;
+}
+export interface SkipFnWithContext<L extends LabelValues<string> = LabelValues<string>, C extends BaseContext = BaseContext> {
+    (labels: L, context: ContextTypes<C>): boolean;
+}
+export interface SkipFnWithField<L extends LabelValues<string> = LabelValues<string>, C extends BaseContext = BaseContext, S = any, A = {
+    [p: string]: any;
+}> {
+    (labels: L, context: ContextTypes<C>, field: FieldTypes<S, C, A>): boolean;
+}
 export declare enum MetricsNames {
     SERVER_STARTING = "apollo_server_starting",
     SERVER_CLOSING = "apollo_server_closing",
@@ -24,19 +57,17 @@ export interface MetricConfig {
     name: MetricsNames;
     help: string;
     type: MetricTypes;
-    labelNames?: string[];
-    buckets?: number[];
+    labelNames: string[];
 }
 export declare const serverLabelNames: string[];
 export declare const queryLabelNames: string[];
 export declare const fieldLabelNames: string[];
-export declare const durationHistogramsBuckets: number[];
 export declare const metricsConfig: MetricConfig[];
 export declare type Metrics = {
     [metricName in MetricsNames]: {
         type: MetricTypes;
-        disabled: boolean;
+        skip: SkipFn | SkipFnWithContext | SkipFnWithField;
         instance: Metric<string> | null;
     };
 };
-export declare function generateMetrics(register: Registry, { disabledMetrics }: Context): Metrics;
+export declare function generateMetrics<C = AppContext, S = Source, A = Args>(register: Registry, { durationHistogramsBuckets, skipMetrics }: Context<C, S, A>): Metrics;

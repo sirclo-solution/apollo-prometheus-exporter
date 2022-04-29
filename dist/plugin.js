@@ -10,7 +10,7 @@ const hooks_1 = require("./hooks");
 const metrics_1 = require("./metrics");
 function toggleDefaultMetrics(register, { defaultMetrics, defaultMetricsOptions }) {
     if (defaultMetrics) {
-        prom_client_1.collectDefaultMetrics({
+        (0, prom_client_1.collectDefaultMetrics)({
             register,
             ...defaultMetricsOptions
         });
@@ -18,16 +18,16 @@ function toggleDefaultMetrics(register, { defaultMetrics, defaultMetricsOptions 
 }
 exports.toggleDefaultMetrics = toggleDefaultMetrics;
 function setDefaultLabels(register, { defaultLabels, hostnameLabel, hostnameLabelName }) {
-    const labels = helpers_1.filterLabels({
+    const labels = (0, helpers_1.filterLabels)({
         ...defaultLabels,
-        [hostnameLabelName]: hostnameLabel ? os_1.hostname() : undefined
+        [hostnameLabelName]: hostnameLabel ? (0, os_1.hostname)() : undefined
     });
     register.setDefaultLabels(labels);
 }
 exports.setDefaultLabels = setDefaultLabels;
 function toggleEndpoint(register, { metricsEndpoint, app, metricsEndpointPath }) {
     if (metricsEndpoint) {
-        endpoint_1.registerEndpoint({
+        (0, endpoint_1.registerEndpoint)({
             app: app,
             register,
             path: metricsEndpointPath
@@ -36,13 +36,13 @@ function toggleEndpoint(register, { metricsEndpoint, app, metricsEndpointPath })
 }
 exports.toggleEndpoint = toggleEndpoint;
 function createPlugin(options) {
-    const context = context_1.generateContext(options);
+    const context = (0, context_1.generateContext)(options);
     const register = context.register;
     toggleDefaultMetrics(register, context);
     setDefaultLabels(register, context);
     toggleEndpoint(register, context);
-    const metrics = metrics_1.generateMetrics(register, context);
-    return hooks_1.generateHooks(metrics);
+    const metrics = (0, metrics_1.generateMetrics)(register, context);
+    return (0, hooks_1.generateHooks)(metrics);
 }
 exports.createPlugin = createPlugin;
 //# sourceMappingURL=plugin.js.map

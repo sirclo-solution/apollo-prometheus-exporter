@@ -29,28 +29,27 @@ function getApolloServerVersion() {
 }
 exports.getApolloServerVersion = getApolloServerVersion;
 function getLabelsFromFieldResolver({ info: { fieldName, parentType, path, returnType } }) {
-    var _a;
     return {
         fieldName,
         parentType: parentType.name,
         pathLength: countFieldAncestors(path),
-        returnType: (_a = returnType) === null || _a === void 0 ? void 0 : _a.name
+        returnType: returnType.toString()
     };
 }
 exports.getLabelsFromFieldResolver = getLabelsFromFieldResolver;
 function generateHooks(metrics) {
-    const actionMetric = (name, labels = {}, value) => {
-        if (!metrics[name].disabled) {
-            const filteredLabels = helpers_1.filterLabels(labels);
+    const actionMetric = ({ name, labels = {}, value }, context, field) => {
+        if (!metrics[name].skip(labels, context, field)) {
+            const filteredLabels = (0, helpers_1.filterLabels)(labels);
             switch (metrics[name].type) {
                 case metrics_1.MetricTypes.GAUGE:
-                    metrics[name].instance.set(filteredLabels, helpers_1.convertMsToS(value));
+                    metrics[name].instance.set(filteredLabels, (0, helpers_1.convertMsToS)(value));
                     break;
                 case metrics_1.MetricTypes.COUNTER:
                     metrics[name].instance.inc(filteredLabels);
                     break;
                 case metrics_1.MetricTypes.HISTOGRAM:
-                    metrics[name].instance.observe(filteredLabels, helpers_1.convertMsToS(value));
+                    metrics[name].instance.observe(filteredLabels, (0, helpers_1.convertMsToS)(value));
                     break;
             }
         }
@@ -58,76 +57,96 @@ function generateHooks(metrics) {
     return {
         serverWillStart() {
             const version = getApolloServerVersion();
-            actionMetric(metrics_1.MetricsNames.SERVER_STARTING, {
-                version
-            }, Date.now());
+            actionMetric({
+                name: metrics_1.MetricsNames.SERVER_STARTING,
+                labels: {
+                    version
+                },
+                value: Date.now()
+            });
             return {
                 serverWillStop() {
-                    actionMetric(metrics_1.MetricsNames.SERVER_CLOSING, {
-                        version
-                    }, Date.now());
+                    actionMetric({
+                        name: metrics_1.MetricsNames.SERVER_CLOSING,
+                        labels: {
+                            version
+                        },
+                        value: Date.now()
+                    });
                 }
             };
         },
         requestDidStart(requestContext) {
             const requestStartDate = Date.now();
-            actionMetric(metrics_1.MetricsNames.QUERY_STARTED, getLabelsFromContext(requestContext));
+            actionMetric({ name: metrics_1.MetricsNames.QUERY_STARTED, labels: getLabelsFromContext(requestContext) }, requestContext);
             return {
                 parsingDidStart(context) {
-                    actionMetric(metrics_1.MetricsNames.QUERY_PARSE_STARTED, getLabelsFromContext(context));
+                    actionMetric({ name: metrics_1.MetricsNames.QUERY_PARSE_STARTED, labels: getLabelsFromContext(context) }, context);
                     return (err) => {
                         if (err) {
-                            actionMetric(metrics_1.MetricsNames.QUERY_PARSE_FAILED, getLabelsFromContext(context));
+                            actionMetric({ name: metrics_1.MetricsNames.QUERY_PARSE_FAILED, labels: getLabelsFromContext(context) }, context);
                         }
                     };
                 },
                 validationDidStart(context) {
-                    actionMetric(metrics_1.MetricsNames.QUERY_VALIDATION_STARTED, getLabelsFromContext(context));
+                    actionMetric({ name: metrics_1.MetricsNames.QUERY_VALIDATION_STARTED, labels: getLabelsFromContext(context) }, context);
                     return (err) => {
                         if (err) {
-                            actionMetric(metrics_1.MetricsNames.QUERY_VALIDATION_FAILED, getLabelsFromContext(context));
+                            actionMetric({ name: metrics_1.MetricsNames.QUERY_VALIDATION_FAILED, labels: getLabelsFromContext(context) }, context);
                         }
                     };
                 },
                 didResolveOperation(context) {
-                    actionMetric(metrics_1.MetricsNames.QUERY_RESOLVED, getLabelsFromContext(context));
+                    actionMetric({ name: metrics_1.MetricsNames.QUERY_RESOLVED, labels: getLabelsFromContext(context) }, context);
                 },
                 executionDidStart(context) {
-                    actionMetric(metrics_1.MetricsNames.QUERY_EXECUTION_STARTED, getLabelsFromContext(context));
+                    actionMetric({ name: metrics_1.MetricsNames.QUERY_EXECUTION_STARTED, labels: getLabelsFromContext(context) }, context);
                     return {
                         willResolveField(field) {
                             const fieldResolveStart = Date.now();
                             return () => {
                                 const fieldResolveEnd = Date.now();
-                                actionMetric(metrics_1.MetricsNames.QUERY_FIELD_RESOLUTION_DURATION, {
-                                    ...getLabelsFromContext(context),
-                                    ...getLabelsFromFieldResolver(field)
-                                }, fieldResolveEnd - fieldResolveStart);
+                                actionMetric({
+                                    name: metrics_1.MetricsNames.QUERY_FIELD_RESOLUTION_DURATION,
+                                    labels: {
+                                        ...getLabelsFromContext(context),
+                                        ...getLabelsFromFieldResolver(field)
+                                    },
+                                    value: fieldResolveEnd - fieldResolveStart
+                                }, context, field);
                             };
                         },
                         executionDidEnd(err) {
                             if (err) {
-                                actionMetric(metrics_1.MetricsNames.QUERY_EXECUTION_FAILED, getLabelsFromContext(context));
+                                actionMetric({ name: metrics_1.MetricsNames.QUERY_EXECUTION_FAILED, labels: getLabelsFromContext(context) }, context);
                             }
                         }
                     };
                 },
                 didEncounterErrors(context) {
                     const requestEndDate = Date.now();
-                    actionMetric(metrics_1.MetricsNames.QUERY_FAILED, getLabelsFromContext(context));
-                    actionMetric(metrics_1.MetricsNames.QUERY_DURATION, {
-                        ...getLabelsFromContext(context),
-                        success: 'false'
-                    }, requestEndDate - requestStartDate);
+                    actionMetric({ name: metrics_1.MetricsNames.QUERY_FAILED, labels: getLabelsFromContext(context) }, context);
+                    actionMetric({
+                        name: metrics_1.MetricsNames.QUERY_DURATION,
+                        labels: {
+                            ...getLabelsFromContext(context),
+                            success: 'false'
+                        },
+                        value: requestEndDate - requestStartDate
+                    }, context);
                 },
                 willSendResponse(context) {
                     var _a, _b;
                     const requestEndDate = Date.now();
                     if (((_b = (_a = context.errors) === null || _a === void 0 ? void 0 : _a.length) !== null && _b !== void 0 ? _b : 0) === 0) {
-                        actionMetric(metrics_1.MetricsNames.QUERY_DURATION, {
-                            ...getLabelsFromContext(context),
-                            success: 'true'
-                        }, requestEndDate - requestStartDate);
+                        actionMetric({
+                            name: metrics_1.MetricsNames.QUERY_DURATION,
+                            labels: {
+                                ...getLabelsFromContext(context),
+                                success: 'true'
+                            },
+                            value: requestEndDate - requestStartDate
+                        }, context);
                     }
                 }
             };

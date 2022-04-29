@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateMetrics = exports.metricsConfig = exports.durationHistogramsBuckets = exports.fieldLabelNames = exports.queryLabelNames = exports.serverLabelNames = exports.MetricTypes = exports.MetricsNames = void 0;
+exports.generateMetrics = exports.metricsConfig = exports.fieldLabelNames = exports.queryLabelNames = exports.serverLabelNames = exports.MetricTypes = exports.MetricsNames = void 0;
 const prom_client_1 = require("prom-client");
 var MetricsNames;
 (function (MetricsNames) {
@@ -27,7 +27,6 @@ var MetricTypes;
 exports.serverLabelNames = ['version'];
 exports.queryLabelNames = ['operationName', 'operation'];
 exports.fieldLabelNames = ['operationName', 'operation', 'fieldName', 'parentType', 'returnType', 'pathLength'];
-exports.durationHistogramsBuckets = [0.1, 0.3, 0.5, 1, 5];
 exports.metricsConfig = [
     {
         name: MetricsNames.SERVER_STARTING,
@@ -37,7 +36,7 @@ exports.metricsConfig = [
     },
     {
         name: MetricsNames.SERVER_CLOSING,
-        help: 'The amount timestamp when Apollo Server was closing.',
+        help: 'The last timestamp when Apollo Server was closing.',
         type: MetricTypes.GAUGE,
         labelNames: exports.serverLabelNames
     },
@@ -99,46 +98,41 @@ exports.metricsConfig = [
         name: MetricsNames.QUERY_DURATION,
         help: 'The total duration of a query.',
         type: MetricTypes.HISTOGRAM,
-        labelNames: [...exports.queryLabelNames, 'success'],
-        buckets: exports.durationHistogramsBuckets
+        labelNames: [...exports.queryLabelNames, 'success']
     },
     {
         name: MetricsNames.QUERY_FIELD_RESOLUTION_DURATION,
         help: 'The total duration for resolving fields.',
         type: MetricTypes.HISTOGRAM,
-        labelNames: exports.fieldLabelNames,
-        buckets: exports.durationHistogramsBuckets
+        labelNames: exports.fieldLabelNames
     }
 ];
-function generateMetrics(register, { disabledMetrics }) {
+function generateMetrics(register, { durationHistogramsBuckets, skipMetrics }) {
     return exports.metricsConfig.reduce((acc, metric) => {
-        const disabled = disabledMetrics.includes(metric.name);
         acc[metric.name] = {
             type: metric.type,
-            disabled,
+            skip: skipMetrics[metric.name],
             instance: null
         };
-        if (!disabled) {
-            const commonConfig = {
-                name: metric.name,
-                help: metric.help,
-                labelNames: metric.labelNames,
-                registers: [register]
-            };
-            switch (metric.type) {
-                case MetricTypes.GAUGE:
-                    acc[metric.name].instance = new prom_client_1.Gauge(commonConfig);
-                    break;
-                case MetricTypes.COUNTER:
-                    acc[metric.name].instance = new prom_client_1.Counter(commonConfig);
-                    break;
-                case MetricTypes.HISTOGRAM:
-                    acc[metric.name].instance = new prom_client_1.Histogram({
-                        ...commonConfig,
-                        buckets: metric.buckets
-                    });
-                    break;
-            }
+        const commonConfig = {
+            name: metric.name,
+            help: metric.help,
+            labelNames: metric.labelNames,
+            registers: [register]
+        };
+        switch (metric.type) {
+            case MetricTypes.GAUGE:
+                acc[metric.name].instance = new prom_client_1.Gauge(commonConfig);
+                break;
+            case MetricTypes.COUNTER:
+                acc[metric.name].instance = new prom_client_1.Counter(commonConfig);
+                break;
+            case MetricTypes.HISTOGRAM:
+                acc[metric.name].instance = new prom_client_1.Histogram({
+                    ...commonConfig,
+                    buckets: durationHistogramsBuckets
+                });
+                break;
         }
         return acc;
     }, {});
