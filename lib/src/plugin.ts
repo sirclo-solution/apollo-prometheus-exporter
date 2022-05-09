@@ -69,5 +69,5 @@ export function createPlugin<C = AppContext, S = Source, A = Args>(
 
   const metrics = generateMetrics(register, context);
 
-  return generateHooks(metrics);
+  return generateHooks(metrics, context);
 }

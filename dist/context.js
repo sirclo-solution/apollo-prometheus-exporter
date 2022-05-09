@@ -16,6 +16,7 @@ function generateContext(options) {
         metricsEndpoint: true,
         metricsEndpointPath: '/metrics',
         register: prom_client_1.register,
+        customLabels: [],
         ...options,
         skipMetrics: {
             [metrics_1.MetricsNames.SERVER_STARTING]: () => false,

@@ -70,4 +70,4 @@ export declare type Metrics = {
         instance: Metric<string> | null;
     };
 };
-export declare function generateMetrics<C = AppContext, S = Source, A = Args>(register: Registry, { durationHistogramsBuckets, skipMetrics }: Context<C, S, A>): Metrics;
+export declare function generateMetrics<C = AppContext, S = Source, A = Args>(register: Registry, { durationHistogramsBuckets, skipMetrics, customLabels }: Context<C, S, A>): Metrics;

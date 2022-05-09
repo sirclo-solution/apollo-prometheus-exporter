@@ -37,5 +37,6 @@ export interface Context<C = AppContext, S = Source, A = Args> {
     metricsEndpointPath: string;
     register: Registry;
     skipMetrics: SkipMetricsMap<C, S, A>;
+    customLabels: string[];
 }
 export declare function generateContext<C = BaseContext, S = Source, A = Args>(options: PluginOptions<C, S, A>): Context<C, S, A>;

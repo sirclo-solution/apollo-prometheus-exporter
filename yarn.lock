@@ -1257,14 +1257,14 @@
     "fs-extra" "^9.0.0"
     "lodash" "^4.17.4"
 
-"@semantic-release/commit-analyzer@^9.0.0":
-  "integrity" "sha512-ncNsnrLmiykhgNZUXNvhhAjNN0me7VGIb0X5hu3ogyi5DDPapjGAHdEffO5vi+HX1BFWLRD/Ximx5PjGAKjAqQ=="
-  "resolved" "https://registry.npmjs.org/@semantic-release/commit-analyzer/-/commit-analyzer-9.0.1.tgz"
-  "version" "9.0.1"
+"@semantic-release/commit-analyzer@^9.0.2":
+  "integrity" "sha512-E+dr6L+xIHZkX4zNMe6Rnwg4YQrWNXK+rNsvwOPpdFppvZO1olE2fIgWhv89TkQErygevbjsZFSIxp+u6w2e5g=="
+  "resolved" "https://registry.npmjs.org/@semantic-release/commit-analyzer/-/commit-analyzer-9.0.2.tgz"
+  "version" "9.0.2"
   dependencies:
     "conventional-changelog-angular" "^5.0.0"
     "conventional-commits-filter" "^2.0.0"
-    "conventional-commits-parser" "^3.0.7"
+    "conventional-commits-parser" "^3.2.3"
     "debug" "^4.0.0"
     "import-from" "^4.0.0"
     "lodash" "^4.17.4"
@@ -3063,10 +3063,10 @@
     "lodash.ismatch" "^4.4.0"
     "modify-values" "^1.0.0"
 
-"conventional-commits-parser@^3.0.0", "conventional-commits-parser@^3.0.7":
-  "integrity" "sha512-Jr9KAKgqAkwXMRHjxDwO/zOCDKod1XdAESHAGuJX38iZ7ZzVti/tvVoysO0suMsdAObp9NQ2rHSsSbnAqZ5f5g=="
-  "resolved" "https://registry.npmjs.org/conventional-commits-parser/-/conventional-commits-parser-3.2.2.tgz"
-  "version" "3.2.2"
+"conventional-commits-parser@^3.0.0", "conventional-commits-parser@^3.2.3":
+  "integrity" "sha512-nK7sAtfi+QXbxHCYfhpZsfRtaitZLIA6889kFIouLvz6repszQDgxBu7wf2WbU+Dco7sAnNCJYERCwt54WPC2Q=="
+  "resolved" "https://registry.npmjs.org/conventional-commits-parser/-/conventional-commits-parser-3.2.4.tgz"
+  "version" "3.2.4"
   dependencies:
     "is-text-path" "^1.0.1"
     "JSONStream" "^1.0.4"
@@ -7744,11 +7744,11 @@
   "version" "1.1.0"
 
 "semantic-release@^18.0.0", "semantic-release@>=18.0.0", "semantic-release@>=18.0.0-beta.1":
-  "integrity" "sha512-/Szyhq5DTZCYry/aZqpBbK/kqv10ydn6oiiaYOXtPgDbAIkqidZcQOm+mfYFJ0sBTUaOYCKMlcPMgJycP7jDYQ=="
-  "resolved" "https://registry.npmjs.org/semantic-release/-/semantic-release-18.0.0.tgz"
-  "version" "18.0.0"
+  "integrity" "sha512-xTdKCaEnCzHr+Fqyhg/5I8P9pvY9z7WHa8TFCYIwcdPbuzAtQShOTzw3VNPsqBT+Yq1kFyBQFBKBYkGOlqWmfA=="
+  "resolved" "https://registry.npmjs.org/semantic-release/-/semantic-release-18.0.1.tgz"
+  "version" "18.0.1"
   dependencies:
-    "@semantic-release/commit-analyzer" "^9.0.0"
+    "@semantic-release/commit-analyzer" "^9.0.2"
     "@semantic-release/error" "^3.0.0"
     "@semantic-release/github" "^8.0.0"
     "@semantic-release/npm" "^8.0.0"

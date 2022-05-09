@@ -12,12 +12,20 @@ export function startServer(port: number = 4000, hostname: string = '0.0.0.0') {
   const typeDefs = readSchema();
 
   const prometheusExporterPlugin = createPrometheusExporterPlugin({
-    app
+    app,
+    customLabels: ['included', 'test']
   });
 
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    context: () => {
+      return {
+        included: 'value1',
+        notIncluded: 'value2',
+        test: 'test'
+      };
+    },
     plugins: [prometheusExporterPlugin]
   });
 
