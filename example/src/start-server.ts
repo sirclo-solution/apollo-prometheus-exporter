@@ -13,7 +13,7 @@ export function startServer(port: number = 4000, hostname: string = '0.0.0.0') {
 
   const prometheusExporterPlugin = createPrometheusExporterPlugin({
     app,
-    customLabels: ['included']
+    customLabels: ['included', 'test']
   });
 
   const server = new ApolloServer({
@@ -22,7 +22,8 @@ export function startServer(port: number = 4000, hostname: string = '0.0.0.0') {
     context: () => {
       return {
         included: 'value1',
-        notIncluded: 'value2'
+        notIncluded: 'value2',
+        test: 'test'
       };
     },
     plugins: [prometheusExporterPlugin]

@@ -21,7 +21,10 @@ export function getCustomLabelsFromAppContext(context: BaseContext, customLabels
   }
 
   // get application's context that correspond with customLabels
-  return customLabels.reduce((_, cur) => ({ [cur]: context[cur] }), {});
+  return customLabels.reduce((result, label) => {
+    result[label] = context[label];
+    return result;
+  }, {} as LabelValues<string>);
 }
 
 export function countFieldAncestors(path: Path | undefined): string {
